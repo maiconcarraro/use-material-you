@@ -1,13 +1,18 @@
 {
-  "name": "vite-typescript-npm-package",
+  "name": "use-material-you",
   "version": "1.0.0",
-  "description": "Vite TypeScript library npm package template",
-  "author": "Jason Sturges <jason@jsonsturges.com> (https://jasonsturges.com)",
-  "homepage": "https://github.com/jasonsturges/vite-typescript-npm-package",
-  "repository": "github:jasonsturges/vite-typescript-npm-package",
+  "description": "React hook to create dynamic schemes and variants based on M3/material-color-utilities",
+  "author": "Maicon Carraro (https://github.com/maiconcarraro)",
+  "homepage": "https://github.com/maiconcarraro/use-material-you",
+  "repository": "github:maiconcarraro/use-material-you",
   "license": "ISC",
   "keywords": [
-    "vite",
+    "react",
+    "m3",
+    "material-color-utilities",
+    "variants",
+    "material-you",
+    "dynamic",
     "typescript",
     "npm",
     "package"
@@ -30,8 +35,11 @@
     "format:styles": "stylelint ./**/*.{css,scss} --fix"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@material/material-color-utilities": "^0.3.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
