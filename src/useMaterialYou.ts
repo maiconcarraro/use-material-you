@@ -91,7 +91,7 @@ export function useMaterialYou(
 
     // hex color
     if (possibleHexColor.startsWith("#")) {
-      setARGBSourceColor(argbFromHex(source));
+      setARGBSourceColor(argbFromHex(possibleHexColor));
     }
   }, [source, options.crossOrigin]);
 
