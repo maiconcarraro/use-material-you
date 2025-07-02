@@ -2,17 +2,24 @@ import { useState } from "react";
 import { useMaterialYou } from "./index";
 import { ContrastLevelType, VariantType } from "./schemes";
 
+const GRIDS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
+
+type InputMode = "color" | "url";
+
 export function Playground() {
-  const [color, setColor] = useState("#FFDE3F");
+  const [source, setSource] = useState("#FFDE3F");
+  const [inputMode, setInputMode] = useState<InputMode>("color");
   const [variant, setVariant] = useState<VariantType>("tonal_spot");
   const [isDark, setDark] = useState(false);
   const [contrastLevel, setContrastLevel] =
     useState<ContrastLevelType>("default");
+  const [grid, setGrid] = useState<Array<(typeof GRIDS)[number]>>([]);
 
-  const [scheme, state] = useMaterialYou(color, {
+  const [scheme, state] = useMaterialYou(source, {
     variant,
     isDark,
     contrastLevel,
+    grid,
   });
 
   return (
@@ -25,11 +32,50 @@ export function Playground() {
           marginBottom: 20,
         }}
       >
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-        />
+        <div>
+          <label>
+            <input
+              type="radio"
+              name="inputMode"
+              value="color"
+              checked={inputMode === "color"}
+              onChange={() => {
+                setInputMode("color");
+                setSource("#FFDE3F");
+              }}
+            />
+            Color
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="inputMode"
+              value="url"
+              checked={inputMode === "url"}
+              onChange={() => {
+                setInputMode("url");
+                setSource("");
+              }}
+            />
+            Image URL
+          </label>
+        </div>
+
+        {inputMode === "color" ? (
+          <input
+            type="color"
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+          />
+        ) : (
+          <input
+            type="text"
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+            placeholder="https://thumbs.dreamstime.com/b/colorful-3x3-puzzle-6954601.jpg"
+            style={{ width: 200 }}
+          />
+        )}
 
         <select
           value={isDark ? "dark" : "light"}
@@ -66,6 +112,32 @@ export function Playground() {
           <option value="high">high</option>
           <option value="reduced">reduced</option>
         </select>
+      </div>
+
+      <div>{inputMode === "url" ? <img src={source} width={100} /> : null}</div>
+
+      <div>
+        <p>Grid (only for images)</p>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "repeat(3, 50px)" }}
+        >
+          {GRIDS.map((i) => (
+            <label key={i} style={{ display: "flex", alignItems: "center" }}>
+              <input
+                type="checkbox"
+                checked={grid.includes(i)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setGrid([...grid, i]);
+                  } else {
+                    setGrid(grid.filter((g) => g !== i));
+                  }
+                }}
+              />
+              {i}
+            </label>
+          ))}
+        </div>
       </div>
 
       {scheme
