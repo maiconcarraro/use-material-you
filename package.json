@@ -1,6 +1,6 @@
 {
   "name": "use-material-you",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "React hook to create dynamic schemes and variants based on M3/material-color-utilities",
   "author": "Maicon Carraro (https://github.com/maiconcarraro)",
   "homepage": "https://github.com/maiconcarraro/use-material-you",
@@ -35,6 +35,7 @@
     "format:styles": "stylelint ./**/*.{css,scss} --fix"
   },
   "dependencies": {
+    "@lokesh.dhakar/quantize": "^1.4.0",
     "@material/material-color-utilities": "^0.3.0"
   },
   "peerDependencies": {
