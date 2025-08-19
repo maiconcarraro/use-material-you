@@ -1,11 +1,14 @@
-import { argbFromRgb } from "@material/material-color-utilities";
-import quantize from "@lokesh.dhakar/quantize";
+import {
+  argbFromRgb,
+  QuantizerCelebi,
+  Score,
+} from "@material/material-color-utilities";
 
 export function findDominantColorsFromPixelData(
   pixelData: Uint8ClampedArray | Uint8Array,
   amount: number = 3,
 ): number[] {
-  const pixels: number[][] = [];
+  const pixels: number[] = [];
   for (let i = 0; i < pixelData.length; i += 4) {
     const r = pixelData[i]!;
     const g = pixelData[i + 1]!;
@@ -14,26 +17,13 @@ export function findDominantColorsFromPixelData(
     if (a < 255) {
       continue;
     }
-    pixels.push([r, g, b]);
+    const argb = argbFromRgb(r, g, b);
+    pixels.push(argb);
   }
 
-  // Replace Material quantize because of inconsistency: https://github.com/material-foundation/material-color-utilities/issues/132
-  // const result = QuantizerCelebi.quantize(pixels, 128);
-  // const ranked = Score.score(result);
-
-  try {
-    const cmap = quantize(pixels, amount);
-
-    if (!cmap) {
-      return [];
-    }
-
-    const palette = cmap.palette();
-    return palette.map(([r, g, b]) => argbFromRgb(r, g, b)).slice(0, amount);
-  } catch (err) {
-    console.error(err);
-    return [];
-  }
+  const result = QuantizerCelebi.quantize(pixels, 128);
+  const ranked = Score.score(result);
+  return ranked.slice(0, amount);
 }
 
 // Original function: https://github.com/material-foundation/material-color-utilities/blob/be615fc90286787bbe0c04ef58a6987e0e8fdc29/typescript/utils/image_utils.ts#L29
