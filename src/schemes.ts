@@ -93,7 +93,7 @@ export function buildDynamicScheme(
       return new SchemeRainbow(sourceColorHct, isDark, contrastLevel);
     case "fruit_salad":
       return new SchemeFruitSalad(sourceColorHct, isDark, contrastLevel);
-    case "image_fidelity":
+    case "image_fidelity": {
       const baseFidelity = new SchemeFidelity(
         sourceColorHct,
         isDark,
@@ -101,7 +101,7 @@ export function buildDynamicScheme(
       );
 
       return new DynamicScheme({
-        sourceColorArgb: baseFidelity.sourceColorArgb,
+        sourceColorHct: sourceColorHct,
         variant: baseFidelity.variant,
         isDark: baseFidelity.isDark,
         contrastLevel: baseFidelity.contrastLevel,
@@ -117,6 +117,7 @@ export function buildDynamicScheme(
         neutralPalette: baseFidelity.neutralPalette,
         neutralVariantPalette: baseFidelity.neutralVariantPalette,
       });
+    }
   }
 }
 

@@ -25,7 +25,7 @@ export function useMaterialYou(
           setState(newScheme ? "done" : "");
         }
       })
-      .catch((err) => {
+      .catch(() => {
         if (!isCancelled) {
           setState("error");
           setScheme(null);

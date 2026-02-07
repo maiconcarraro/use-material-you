@@ -3,6 +3,34 @@ import {
   QuantizerCelebi,
   Score,
 } from "@material/material-color-utilities";
+import type {
+  ColorWorkerMessage,
+  ColorWorkerResponse,
+} from "./colorWorker";
+
+let colorWorker: Worker | null = null;
+let workerSupported: boolean | null = null;
+
+function getColorWorker(): Worker | null {
+  if (workerSupported === false) {
+    return null;
+  }
+
+  if (colorWorker) {
+    return colorWorker;
+  }
+
+  try {
+    colorWorker = new Worker(new URL("./colorWorker.ts", import.meta.url), {
+      type: "module",
+    });
+    workerSupported = true;
+    return colorWorker;
+  } catch {
+    workerSupported = false;
+    return null;
+  }
+}
 
 export function findDominantColorsFromPixelData(
   pixelData: Uint8ClampedArray | Uint8Array,
@@ -26,12 +54,54 @@ export function findDominantColorsFromPixelData(
   return ranked.slice(0, amount);
 }
 
+export function findDominantColorsFromPixelDataAsync(
+  pixelData: Uint8ClampedArray | Uint8Array,
+  amount: number = 3,
+  useWorker: boolean = true,
+): Promise<number[]> {
+  const worker = useWorker ? getColorWorker() : null;
+
+  if (!worker) {
+    // Fallback to sync processing if workers not supported or disabled
+    return Promise.resolve(findDominantColorsFromPixelData(pixelData, amount));
+  }
+
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error("Worker timeout"));
+    }, 30000);
+
+    const handleMessage = (e: MessageEvent<ColorWorkerResponse>) => {
+      clearTimeout(timeoutId);
+      worker.removeEventListener("message", handleMessage);
+      worker.removeEventListener("error", handleError);
+      resolve(e.data.colors);
+    };
+
+    const handleError = (e: ErrorEvent) => {
+      clearTimeout(timeoutId);
+      worker.removeEventListener("message", handleMessage);
+      worker.removeEventListener("error", handleError);
+      reject(e.error || new Error("Worker error"));
+    };
+
+    worker.addEventListener("message", handleMessage);
+    worker.addEventListener("error", handleError);
+
+    worker.postMessage({
+      pixelData,
+      amount,
+    } satisfies ColorWorkerMessage);
+  });
+}
+
 // Original function: https://github.com/material-foundation/material-color-utilities/blob/be615fc90286787bbe0c04ef58a6987e0e8fdc29/typescript/utils/image_utils.ts#L29
 // Allow to specify an amount of dominant colors
 export async function sourceColorFromImage(
   image: HTMLImageElement,
   amount: number = 3,
   grid?: Array<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9>,
+  useWorker: boolean = true,
 ) {
   const isPartialImage = grid && grid.length > 0 && grid.length < 9;
 
@@ -94,7 +164,7 @@ export async function sourceColorFromImage(
     }
   });
 
-  return findDominantColorsFromPixelData(imageBytes, amount);
+  return findDominantColorsFromPixelDataAsync(imageBytes, amount, useWorker);
 }
 
 export function isPreferColorSchemeDark() {

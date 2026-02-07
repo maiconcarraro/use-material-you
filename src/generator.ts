@@ -23,6 +23,11 @@ export interface Options {
   isDark?: boolean;
   imageFetcher?: (src: string) => Promise<number[]>;
   grid?: Array<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9>;
+  /**
+   * Whether to use Web Workers for color extraction (default: true).
+   * Set to false for environments with limited Worker support (e.g., WKWebView on iOS).
+   */
+  useWorker?: boolean;
 }
 
 export interface GetMaterialYouSchemeProps extends Options {
@@ -30,7 +35,7 @@ export interface GetMaterialYouSchemeProps extends Options {
 }
 
 const REGEX_URL =
-  /(http|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/;
+  /(http|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/;
 const REGEX_RGBA = /^rgba?/i;
 
 export async function getMaterialYouScheme({
@@ -62,7 +67,12 @@ export async function getMaterialYouScheme({
           const img = document.createElement("img");
           img.src = URL.createObjectURL(blob);
           try {
-            return await sourceColorFromImage(img, 3, options.grid);
+            return await sourceColorFromImage(
+              img,
+              3,
+              options.grid,
+              options.useWorker,
+            );
           } finally {
             URL.revokeObjectURL(img.src);
           }
