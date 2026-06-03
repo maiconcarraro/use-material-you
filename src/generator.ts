@@ -64,17 +64,18 @@ export async function getMaterialYouScheme({
         return async (src: string) => {
           const response = await fetch(src);
           const blob = await response.blob();
-          const img = document.createElement("img");
-          img.src = URL.createObjectURL(blob);
+          // createImageBitmap avoids the URL.createObjectURL + Image
+          // onload race condition that can hang on restricted environments.
+          const bitmap = await createImageBitmap(blob);
           try {
             return await sourceColorFromImage(
-              img,
+              bitmap,
               3,
               options.grid,
               options.useWorker,
             );
           } finally {
-            URL.revokeObjectURL(img.src);
+            bitmap.close();
           }
         };
       })();

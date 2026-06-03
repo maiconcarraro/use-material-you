@@ -66,7 +66,7 @@ export function findDominantColorsFromPixelDataAsync(
   return new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new Error("Worker timeout"));
-    }, 30000);
+    }, 5000);
 
     const handleMessage = (e: MessageEvent<ColorWorkerResponse>) => {
       clearTimeout(timeoutId);
@@ -95,12 +95,21 @@ export function findDominantColorsFromPixelDataAsync(
 // Original function: https://github.com/material-foundation/material-color-utilities/blob/be615fc90286787bbe0c04ef58a6987e0e8fdc29/typescript/utils/image_utils.ts#L29
 // Allow to specify an amount of dominant colors
 export async function sourceColorFromImage(
-  image: HTMLImageElement,
+  image: HTMLImageElement | ImageBitmap,
   amount: number = 3,
   grid?: Array<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9>,
   useWorker: boolean = true,
 ) {
   const isPartialImage = grid && grid.length > 0 && grid.length < 9;
+
+  // ImageBitmap is already decoded, so we can skip the onload/onerror dance
+  // that is required for HTMLImageElement.
+  if (image instanceof HTMLImageElement && !image.complete) {
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error("Image load failed"));
+    });
+  }
 
   // Convert Image data to Pixel Array
   const imageBytes = await new Promise<Uint8ClampedArray>((resolve, reject) => {
@@ -112,34 +121,36 @@ export async function sourceColorFromImage(
       reject(new Error("Could not get canvas context"));
       return;
     }
-    const loadCallback = () => {
-      canvas.width = image.width;
-      canvas.height = image.height;
-      context.drawImage(image, 0, 0);
 
-      if (isPartialImage) {
-        const cellWidth = image.width / 3;
-        const cellHeight = image.height / 3;
+    canvas.width = image.width;
+    canvas.height = image.height;
+    context.drawImage(image, 0, 0);
 
-        const selectedPixels: number[] = [];
+    if (isPartialImage) {
+      const cellWidth = image.width / 3;
+      const cellHeight = image.height / 3;
 
-        for (const cell of grid) {
-          const row = Math.floor((cell - 1) / 3);
-          const col = (cell - 1) % 3;
-          const sx = col * cellWidth;
-          const sy = row * cellHeight;
+      const selectedPixels: number[] = [];
 
-          const data = context.getImageData(sx, sy, cellWidth, cellHeight).data;
-          for (let i = 0; i < data.length; i++) {
-            selectedPixels.push(data[i]!);
-          }
+      for (const cell of grid) {
+        const row = Math.floor((cell - 1) / 3);
+        const col = (cell - 1) % 3;
+        const sx = col * cellWidth;
+        const sy = row * cellHeight;
+
+        const data = context.getImageData(sx, sy, cellWidth, cellHeight).data;
+        for (let i = 0; i < data.length; i++) {
+          selectedPixels.push(data[i]!);
         }
-
-        resolve(new Uint8ClampedArray(selectedPixels));
-        return;
       }
 
-      let rect = [0, 0, image.width, image.height];
+      resolve(new Uint8ClampedArray(selectedPixels));
+      return;
+    }
+
+    let rect = [0, 0, image.width, image.height];
+    // dataset is only available on HTMLImageElement
+    if (image instanceof HTMLImageElement) {
       const area = image.dataset["area"];
       if (area && /^\d+(\s*,\s*\d+){3}$/.test(area)) {
         rect = area.split(/\s*,\s*/).map((s) => {
@@ -147,18 +158,9 @@ export async function sourceColorFromImage(
           return parseInt(s, 10);
         });
       }
-      const [sx, sy, sw, sh] = rect;
-      resolve(context.getImageData(sx!, sy!, sw!, sh!).data);
-    };
-    const errorCallback = () => {
-      reject(new Error("Image load failed"));
-    };
-    if (image.complete) {
-      loadCallback();
-    } else {
-      image.onload = loadCallback;
-      image.onerror = errorCallback;
     }
+    const [sx, sy, sw, sh] = rect;
+    resolve(context.getImageData(sx!, sy!, sw!, sh!).data);
   });
 
   return findDominantColorsFromPixelDataAsync(imageBytes, amount, useWorker);
