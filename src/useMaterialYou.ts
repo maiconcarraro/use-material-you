@@ -10,9 +10,9 @@ export function useMaterialYou(
   options: Options,
   timeoutMs: number = DEFAULT_TIMEOUT_MS, // pass `0` to disable the timeout entirely
 ) {
-  const [state, setState] = React.useState<"" | "error" | "loading" | "done">(
-    "",
-  );
+  const [state, setState] = React.useState<
+    "idle" | "error" | "loading" | "done"
+  >("idle");
   const [scheme, setScheme] = React.useState<SimpleDynamicScheme | null>(null);
 
   const optionsString = JSON.stringify(options);
@@ -43,10 +43,11 @@ export function useMaterialYou(
       .then((newScheme) => {
         if (!isCancelled) {
           setScheme(newScheme);
-          setState(newScheme ? "done" : "");
+          setState(newScheme ? "done" : "idle");
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("useMaterialYou: failed to generate scheme", err);
         if (!isCancelled) {
           setState("error");
           setScheme(null);
@@ -57,7 +58,7 @@ export function useMaterialYou(
       isCancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [source, optionsString, timeoutMs]);
+  }, [source, optionsString, options.imageFetcher, timeoutMs]);
 
   return [scheme, state] as const;
 }

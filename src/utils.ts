@@ -7,6 +7,7 @@ import type { ColorWorkerMessage, ColorWorkerResponse } from "./colorWorker";
 
 let colorWorker: Worker | null = null;
 let workerSupported: boolean | null = null;
+let nextWorkerMessageId = 0;
 
 function getColorWorker(): Worker | null {
   if (workerSupported === false) {
@@ -64,11 +65,13 @@ export function findDominantColorsFromPixelDataAsync(
   }
 
   return new Promise((resolve, reject) => {
+    const messageId = nextWorkerMessageId++;
     const timeoutId = setTimeout(() => {
       reject(new Error("Worker timeout"));
     }, 5000);
 
     const handleMessage = (e: MessageEvent<ColorWorkerResponse>) => {
+      if (e.data.id !== messageId) return;
       clearTimeout(timeoutId);
       worker.removeEventListener("message", handleMessage);
       worker.removeEventListener("error", handleError);
@@ -86,6 +89,7 @@ export function findDominantColorsFromPixelDataAsync(
     worker.addEventListener("error", handleError);
 
     worker.postMessage({
+      id: messageId,
       pixelData,
       amount,
     } satisfies ColorWorkerMessage);

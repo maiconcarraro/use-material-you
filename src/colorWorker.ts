@@ -5,11 +5,13 @@ import {
 } from "@material/material-color-utilities";
 
 export interface ColorWorkerMessage {
+  id: number;
   pixelData: Uint8ClampedArray | Uint8Array;
   amount: number;
 }
 
 export interface ColorWorkerResponse {
+  id: number;
   colors: number[];
 }
 
@@ -36,7 +38,7 @@ function findDominantColorsFromPixelData(
 }
 
 self.onmessage = (e: MessageEvent<ColorWorkerMessage>) => {
-  const { pixelData, amount } = e.data;
+  const { id, pixelData, amount } = e.data;
   const colors = findDominantColorsFromPixelData(pixelData, amount);
-  self.postMessage({ colors } satisfies ColorWorkerResponse);
+  self.postMessage({ id, colors } satisfies ColorWorkerResponse);
 };
