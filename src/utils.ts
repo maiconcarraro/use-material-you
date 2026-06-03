@@ -3,10 +3,7 @@ import {
   QuantizerCelebi,
   Score,
 } from "@material/material-color-utilities";
-import type {
-  ColorWorkerMessage,
-  ColorWorkerResponse,
-} from "./colorWorker";
+import type { ColorWorkerMessage, ColorWorkerResponse } from "./colorWorker";
 
 let colorWorker: Worker | null = null;
 let workerSupported: boolean | null = null;
