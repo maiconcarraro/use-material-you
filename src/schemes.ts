@@ -40,12 +40,53 @@ export interface SimpleDynamicScheme {
   inversePrimary: string;
 }
 
+// ---------------------------------------------------------------------------
+// Variant — supports both the new Variant enum (numeric) and the legacy
+// string-based variant names for backward compatibility.
+// ---------------------------------------------------------------------------
+
+export type VariantString =
+  | "monochrome"
+  | "neutral"
+  | "tonal_spot"
+  | "vibrant"
+  | "expressive"
+  | "fidelity"
+  | "content"
+  | "rainbow"
+  | "fruit_salad";
+
+/** Accepted variant values: the Variant enum, legacy strings, or "image_fidelity". */
+export type VariantType = Variant | VariantString | "image_fidelity";
+
+/** Maps legacy string variants to their Variant enum equivalent. */
+export const VARIANT_STRING_MAP: Record<VariantString, Variant> = {
+  monochrome: Variant.MONOCHROME,
+  neutral: Variant.NEUTRAL,
+  tonal_spot: Variant.TONAL_SPOT,
+  vibrant: Variant.VIBRANT,
+  expressive: Variant.EXPRESSIVE,
+  fidelity: Variant.FIDELITY,
+  content: Variant.CONTENT,
+  rainbow: Variant.RAINBOW,
+  fruit_salad: Variant.FRUIT_SALAD,
+};
+
 /**
- * Standard Material 3 variants from the Variant enum.
- * Also accepts "image_fidelity" — a custom variant that uses the top
- * dominant colors from an image as primary, secondary, and tertiary.
+ * Resolves any VariantType input to a canonical form for internal use.
+ * - Variant enum values pass through as-is.
+ * - Legacy string values are mapped to the equivalent Variant enum.
+ * - "image_fidelity" is returned as-is for special handling.
  */
-export type VariantType = Variant | "image_fidelity";
+export function resolveVariant(
+  variant: VariantType,
+): Variant | "image_fidelity" {
+  if (variant === "image_fidelity") return "image_fidelity";
+  if (typeof variant === "string") return VARIANT_STRING_MAP[variant];
+  return variant;
+}
+
+// ---------------------------------------------------------------------------
 
 export type ContrastLevelType = "default" | "medium" | "high" | "reduced";
 
@@ -66,7 +107,9 @@ export function buildDynamicScheme(
   dominants: number[],
   specVersion?: SpecVersion,
 ): DynamicScheme {
-  if (variant === "image_fidelity") {
+  const resolved = resolveVariant(variant);
+
+  if (resolved === "image_fidelity") {
     return DynamicScheme.from({
       sourceColorHct,
       variant: Variant.FIDELITY,
@@ -87,7 +130,7 @@ export function buildDynamicScheme(
 
   return DynamicScheme.from({
     sourceColorHct,
-    variant: variant as Variant,
+    variant: resolved,
     isDark,
     contrastLevel,
     specVersion,
