@@ -1,17 +1,12 @@
 import {
   DynamicScheme,
   Hct,
-  SchemeContent,
-  SchemeExpressive,
-  SchemeFidelity,
-  SchemeFruitSalad,
-  SchemeMonochrome,
-  SchemeNeutral,
-  SchemeRainbow,
-  SchemeTonalSpot,
-  SchemeVibrant,
-  TonalPalette,
-} from "@material/material-color-utilities";
+  Variant,
+} from "@materialx/material-color-utilities";
+import type { SpecVersion } from "@materialx/material-color-utilities";
+
+export { Variant };
+export type { SpecVersion } from "@materialx/material-color-utilities";
 
 export interface SimpleDynamicScheme {
   primary: string;
@@ -45,21 +40,17 @@ export interface SimpleDynamicScheme {
   inversePrimary: string;
 }
 
-export type VariantType =
-  | "monochrome"
-  | "neutral"
-  | "tonal_spot"
-  | "vibrant"
-  | "expressive"
-  | "fidelity"
-  | "content"
-  | "rainbow"
-  | "fruit_salad"
-  | "image_fidelity"; // image_fidelity is custom, to try to keep the top 3 colors from image as primary, secondary and tertiary
+/**
+ * Standard Material 3 variants from the Variant enum.
+ * Also accepts "image_fidelity" — a custom variant that uses the top
+ * dominant colors from an image as primary, secondary, and tertiary.
+ */
+export type VariantType = Variant | "image_fidelity";
 
 export type ContrastLevelType = "default" | "medium" | "high" | "reduced";
 
-// Reference: https://github.com/material-foundation/material-color-utilities/blob/be615fc90286787bbe0c04ef58a6987e0e8fdc29/make_schemes.md?plain=1#L23
+// Note: reduced contrast (contrastLevel < 0) is only supported with SpecVersion.SPEC_2021.
+// SpecVersion.SPEC_2025 does not allow negative contrast levels.
 export const ContrastLevelTypeMap: Record<ContrastLevelType, number> = {
   default: 0.0,
   medium: 0.5,
@@ -73,52 +64,34 @@ export function buildDynamicScheme(
   isDark: boolean,
   contrastLevel: number,
   dominants: number[],
+  specVersion?: SpecVersion,
 ): DynamicScheme {
-  switch (variant) {
-    case "monochrome":
-      return new SchemeMonochrome(sourceColorHct, isDark, contrastLevel);
-    case "neutral":
-      return new SchemeNeutral(sourceColorHct, isDark, contrastLevel);
-    case "tonal_spot":
-      return new SchemeTonalSpot(sourceColorHct, isDark, contrastLevel);
-    case "vibrant":
-      return new SchemeVibrant(sourceColorHct, isDark, contrastLevel);
-    case "expressive":
-      return new SchemeExpressive(sourceColorHct, isDark, contrastLevel);
-    case "fidelity":
-      return new SchemeFidelity(sourceColorHct, isDark, contrastLevel);
-    case "content":
-      return new SchemeContent(sourceColorHct, isDark, contrastLevel);
-    case "rainbow":
-      return new SchemeRainbow(sourceColorHct, isDark, contrastLevel);
-    case "fruit_salad":
-      return new SchemeFruitSalad(sourceColorHct, isDark, contrastLevel);
-    case "image_fidelity": {
-      const baseFidelity = new SchemeFidelity(
-        sourceColorHct,
-        isDark,
-        contrastLevel,
-      );
-
-      return new DynamicScheme({
-        sourceColorHct: sourceColorHct,
-        variant: baseFidelity.variant,
-        isDark: baseFidelity.isDark,
-        contrastLevel: baseFidelity.contrastLevel,
-        primaryPalette: TonalPalette.fromInt(
-          dominants[0] ?? baseFidelity.primaryPaletteKeyColor,
-        ),
-        secondaryPalette: TonalPalette.fromInt(
-          dominants[1] ?? baseFidelity.secondaryPaletteKeyColor,
-        ),
-        tertiaryPalette: TonalPalette.fromInt(
-          dominants[2] ?? baseFidelity.tertiaryPaletteKeyColor,
-        ),
-        neutralPalette: baseFidelity.neutralPalette,
-        neutralVariantPalette: baseFidelity.neutralVariantPalette,
-      });
-    }
+  if (variant === "image_fidelity") {
+    return DynamicScheme.from({
+      sourceColorHct,
+      variant: Variant.FIDELITY,
+      isDark,
+      contrastLevel,
+      specVersion,
+      primaryPaletteKeyColor: dominants[0]
+        ? Hct.fromInt(dominants[0])
+        : undefined,
+      secondaryPaletteKeyColor: dominants[1]
+        ? Hct.fromInt(dominants[1])
+        : undefined,
+      tertiaryPaletteKeyColor: dominants[2]
+        ? Hct.fromInt(dominants[2])
+        : undefined,
+    });
   }
+
+  return DynamicScheme.from({
+    sourceColorHct,
+    variant: variant as Variant,
+    isDark,
+    contrastLevel,
+    specVersion,
+  });
 }
 
 // Avoid to specify a different attribute that is not part of the expected scheme

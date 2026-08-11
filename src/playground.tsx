@@ -1,24 +1,49 @@
 import { useState } from "react";
 import { useMaterialYou } from "./index";
-import { ContrastLevelType, VariantType } from "./schemes";
+import { ContrastLevelType, Variant, VariantType } from "./schemes";
+import type { SpecVersion } from "./schemes";
+import { SpecVersion as SpecVersionEnum } from "@materialx/material-color-utilities";
 
 const GRIDS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
 type InputMode = "color" | "url";
 
+const VARIANT_OPTIONS: { label: string; value: VariantType }[] = [
+  { label: "monochrome", value: Variant.MONOCHROME },
+  { label: "neutral", value: Variant.NEUTRAL },
+  { label: "tonal_spot", value: Variant.TONAL_SPOT },
+  { label: "vibrant", value: Variant.VIBRANT },
+  { label: "expressive", value: Variant.EXPRESSIVE },
+  { label: "fidelity", value: Variant.FIDELITY },
+  { label: "content", value: Variant.CONTENT },
+  { label: "rainbow", value: Variant.RAINBOW },
+  { label: "fruit_salad", value: Variant.FRUIT_SALAD },
+  { label: "image_fidelity", value: "image_fidelity" },
+];
+
+const SPEC_OPTIONS: { label: string; value: string }[] = [
+  { label: "default", value: "" },
+  { label: "2021", value: SpecVersionEnum.SPEC_2021 },
+  { label: "2025", value: SpecVersionEnum.SPEC_2025 },
+];
+
 export function Playground() {
   const [source, setSource] = useState("#FFDE3F");
   const [inputMode, setInputMode] = useState<InputMode>("color");
-  const [variant, setVariant] = useState<VariantType>("tonal_spot");
+  const [variant, setVariant] = useState<VariantType>(Variant.TONAL_SPOT);
   const [isDark, setDark] = useState(false);
   const [contrastLevel, setContrastLevel] =
     useState<ContrastLevelType>("default");
+  const [specVersion, setSpecVersion] = useState<SpecVersion | undefined>(
+    undefined,
+  );
   const [grid, setGrid] = useState<Array<(typeof GRIDS)[number]>>([]);
 
   const [scheme, state] = useMaterialYou(source, {
     variant,
     isDark,
     contrastLevel,
+    specVersion,
     grid,
   });
 
@@ -86,19 +111,21 @@ export function Playground() {
         </select>
 
         <select
-          value={variant}
-          onChange={(e) => setVariant(e.target.value as VariantType)}
+          value={variant.toString()}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === "image_fidelity") {
+              setVariant("image_fidelity");
+            } else {
+              setVariant(Number(val) as Variant);
+            }
+          }}
         >
-          <option value="neutral">neutral</option>
-          <option value="monochrome">monochrome</option>
-          <option value="tonal_spot">tonal_spot</option>
-          <option value="vibrant">vibrant</option>
-          <option value="expressive">expressive</option>
-          <option value="fidelity">fidelity</option>
-          <option value="content">content</option>
-          <option value="rainbow">rainbow</option>
-          <option value="fruit_salad">fruit_salad</option>
-          <option value="image_fidelity">image_fidelity</option>
+          {VARIANT_OPTIONS.map(({ label, value }) => (
+            <option key={label} value={value.toString()}>
+              {label}
+            </option>
+          ))}
         </select>
 
         <select
@@ -111,6 +138,20 @@ export function Playground() {
           <option value="medium">medium</option>
           <option value="high">high</option>
           <option value="reduced">reduced</option>
+        </select>
+
+        <select
+          value={specVersion ?? ""}
+          onChange={(e) => {
+            const val = e.target.value;
+            setSpecVersion(val ? (val as SpecVersion) : undefined);
+          }}
+        >
+          {SPEC_OPTIONS.map(({ label, value }) => (
+            <option key={label} value={value}>
+              spec: {label}
+            </option>
+          ))}
         </select>
       </div>
 

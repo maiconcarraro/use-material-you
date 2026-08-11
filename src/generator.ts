@@ -2,13 +2,15 @@ import {
   hexFromArgb,
   argbFromHex,
   Hct,
-} from "@material/material-color-utilities";
+} from "@materialx/material-color-utilities";
+import type { SpecVersion } from "@materialx/material-color-utilities";
 import {
   buildDynamicScheme,
   ContrastLevelType,
   ContrastLevelTypeMap,
   DYNAMIC_SCHEME_FIELDS,
   SimpleDynamicScheme,
+  Variant,
   VariantType,
 } from "./schemes";
 import {
@@ -21,6 +23,13 @@ export interface Options {
   variant?: VariantType;
   contrastLevel?: ContrastLevelType;
   isDark?: boolean;
+  /**
+   * Material Color Utilities spec version.
+   * - SpecVersion.SPEC_2021: original 2021 spec (supports reduced contrast)
+   * - SpecVersion.SPEC_2025: latest 2025 spec with refined colors and surface variants
+   * Defaults to the library's default (currently SPEC_2021).
+   */
+  specVersion?: SpecVersion;
   imageFetcher?: (src: string) => Promise<number[]>;
   grid?: Array<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9>;
   /**
@@ -42,10 +51,11 @@ export async function getMaterialYouScheme({
   source,
   ...options
 }: GetMaterialYouSchemeProps) {
-  const variant: VariantType = options.variant ?? "fidelity";
+  const variant: VariantType = options.variant ?? Variant.FIDELITY;
   const contrastLevel: number =
     ContrastLevelTypeMap[options.contrastLevel ?? "default"];
   const isDark: boolean = options.isDark ?? isPreferColorSchemeDark();
+  const specVersion: SpecVersion | undefined = options.specVersion;
 
   let argbSourceColor: number | undefined;
   let dominants: number[] = [];
@@ -103,6 +113,7 @@ export async function getMaterialYouScheme({
     isDark,
     contrastLevel,
     dominants,
+    specVersion,
   );
 
   const newScheme = DYNAMIC_SCHEME_FIELDS.reduce((scheme, field) => {

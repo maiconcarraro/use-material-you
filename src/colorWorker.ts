@@ -2,7 +2,7 @@ import {
   argbFromRgb,
   QuantizerCelebi,
   Score,
-} from "@material/material-color-utilities";
+} from "@materialx/material-color-utilities";
 
 export interface ColorWorkerMessage {
   id: number;

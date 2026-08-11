@@ -2,7 +2,7 @@ import {
   argbFromRgb,
   QuantizerCelebi,
   Score,
-} from "@material/material-color-utilities";
+} from "@materialx/material-color-utilities";
 import type { ColorWorkerMessage, ColorWorkerResponse } from "./colorWorker";
 
 let colorWorker: Worker | null = null;
