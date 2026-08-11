@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useMaterialYou } from "./index";
-import { ContrastLevelType, Variant, VariantType } from "./schemes";
-import type { SpecVersion } from "./schemes";
-import { SpecVersion as SpecVersionEnum } from "@materialx/material-color-utilities";
+import {
+  ContrastLevelType,
+  Variant,
+  VariantType,
+  SpecVersion,
+} from "./schemes";
 
 const GRIDS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
@@ -23,8 +26,8 @@ const VARIANT_OPTIONS: { label: string; value: VariantType }[] = [
 
 const SPEC_OPTIONS: { label: string; value: string }[] = [
   { label: "default", value: "" },
-  { label: "2021", value: SpecVersionEnum.SPEC_2021 },
-  { label: "2025", value: SpecVersionEnum.SPEC_2025 },
+  { label: "2021", value: SpecVersion.SPEC_2021 },
+  { label: "2025", value: SpecVersion.SPEC_2025 },
 ];
 
 export function Playground() {

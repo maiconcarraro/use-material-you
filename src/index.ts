@@ -4,8 +4,12 @@ export type {
   VariantType,
   SimpleDynamicScheme,
 } from "./schemes";
-export { Variant, VARIANT_STRING_MAP, resolveVariant } from "./schemes";
-export type { SpecVersion } from "./schemes";
+export {
+  Variant,
+  SpecVersion,
+  VARIANT_STRING_MAP,
+  resolveVariant,
+} from "./schemes";
 export type { Options } from "./generator";
 export { useMaterialYou } from "./useMaterialYou";
 export { getMaterialYouScheme } from "./generator";

@@ -5,8 +5,7 @@ import {
 } from "@materialx/material-color-utilities";
 import type { SpecVersion } from "@materialx/material-color-utilities";
 
-export { Variant };
-export type { SpecVersion } from "@materialx/material-color-utilities";
+export { Variant, SpecVersion } from "@materialx/material-color-utilities";
 
 export interface SimpleDynamicScheme {
   primary: string;
